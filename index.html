@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYLEAD Youth Research Survey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --primary: #4f46e5;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+            color: #1f2937;
+            min-height: 100vh;
+        }
+        
+        .slide {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border-radius: 16px;
+        }
+        
+        .progress-step {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #e5e7eb;
+            color: #6b7280;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .progress-step.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+        }
+        
+        .progress-step.completed {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .progress-connector {
+            flex: 1;
+            height: 3px;
+            background: #e5e7eb;
+            margin: 0 -2px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-connector.active:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            animation: progressFill 1s ease-out forwards;
+        }
+        
+        @keyframes progressFill {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        .option-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .option-card.selected {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        
+        .checkbox-option {
+            transition: all 0.2s ease;
+        }
+        
+        .checkbox-option.selected {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--secondary);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+        
+        .floating-shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.1;
+            z-index: -1;
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(10px, 10px) rotate(5deg); }
+            50% { transform: translate(0, 15px) rotate(0deg); }
+            75% { transform: translate(-10px, 5px) rotate(-5deg); }
+        }
+        
+        .other-input {
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .other-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        
+        .section-title {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="min-h-screen overflow-x-hidden">
+    <!-- Floating background shapes -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="floating-shape bg-purple-500 w-64 h-64 top-20 left-10" style="animation-delay: 0s;"></div>
+        <div class="floating-shape bg-emerald-400 w-80 h-80 bottom-1/4 right-20" style="animation-delay: 2s;"></div>
+        <div class="floating-shape bg-blue-400 w-72 h-72 top-1/3 left-1/3" style="animation-delay: 4s;"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="relative py-8 z-10">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <div class="flex justify-center mb-4">
+                    <img src="https://sylead-surveys.netlify.app/logo.png" alt="SYLEAD Logo" class="h-16 md:h-20">
+                </div>
+                <h1 class="text-3xl md:text-4xl font-bold mb-2">
+                    <span class="text-gradient">SYLEAD Youth Research Survey</span>
+                </h1>
+                <p class="text-lg text-gray-600 mb-2">Cilmi-baaris: Shaqo la'aanta dhalinyarada iyo sababaha tahriibka u keena</p>
+                <p class="text-sm text-gray-500">Goobta: Garoowe, Puntland, Soomaaliya</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress indicator -->
+    <div class="container mx-auto px-4 mb-8">
+        <div class="flex items-center justify-between max-w-2xl mx-auto">
+            <div class="progress-step completed">
+                <i data-feather="check" class="w-4 h-4"></i>
+            </div>
+            <div class="progress-connector active"></div>
+            <div class="progress-step active">2</div>
+            <div class="progress-connector"></div>
+            <div class="progress-step">3</div>
+            <div class="progress-connector"></div>
+            <div class="progress-step">4</div>
+            <div class="progress-connector"></div>
+            <div class="progress-step">5</div>
+        </div>
+    </div>
+
+    <!-- Survey form -->
+    <main class="container mx-auto px-4 pb-12 relative z-10">
+        <form id="surveyForm" class="max-w-3xl mx-auto">
+            <!-- Slide 1 - Personal Information -->
+            <div class="slide active glass-card p-6 md:p-8" id="slide1">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 section-title">Qaybta A – Xogta shaqsiga</h2>
+                
+                <!-- Question 1 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">1. Da’daada:</label>
+                    <input type="number" name="age" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Gali da'daada" min="10" max="30" required>
+                </div>
+                
+                <!-- Question 2 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">2. Jinsiga:</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="gender" value="Lab" class="hidden">
+                            <i data-feather="user" class="w-8 h-8 text-blue-500 mx-auto mb-2"></i>
+                            <span class="text-gray-700">Lab</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="gender" value="Dhedig" class="hidden">
+                            <i data-feather="user" class="w-8 h-8 text-pink-500 mx-auto mb-2"></i>
+                            <span class="text-gray-700">Dhedig</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Question 3 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">3. Fasalka aad dhigato:</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="grade" value="Form 3" class="hidden">
+                            <span class="text-gray-700">Form 3</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="grade" value="Form 4" class="hidden">
+                            <span class="text-gray-700">Form 4</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Question 4 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">4. Xaafadda aad degan tahay:</label>
+                    <input type="text" name="neighborhood" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Gali xaafadda" required>
+                </div>
+                
+                <div class="flex justify-end mt-8">
+                    <button type="button" onclick="nextSlide()" class="btn-primary px-6 py-3 rounded-lg text-white font-medium flex items-center">
+                        Next <i data-feather="arrow-right" class="w-4 h-4 ml-2"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Slide 2 - General Views -->
+            <div class="slide glass-card p-6 md:p-8" id="slide2">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 section-title">Qaybta B – Aragti guud oo ku saabsan shaqada iyo mustaqbalka</h2>
+                
+                <!-- Question 5 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">5. Marka aad dhammayso dugsiga sare, maxaad rabtaa inaad sameyso?</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="after_school" value="Inaad jaamacad gasho" class="hidden">
+                            <span class="text-gray-700">Inaad jaamacad gasho</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="after_school" value="Inaad shaqo raadsato" class="hidden">
+                            <span class="text-gray-700">Inaad shaqo raadsato</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="after_school" value="Inaad xirfad barato" class="hidden">
+                            <span class="text-gray-700">Inaad xirfad barato</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="after_school" value="Inaad safar ama tahriib sameyso" class="hidden">
+                            <span class="text-gray-700">Inaad safar ama tahriib sameyso</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Question 6 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">6. Ma aaminsantahay in dhalinyarada Garoowe in ay fursado shaqo helaan marka ay waxbarashada dhammaystaan?</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="job_opportunities" value="Haa" class="hidden">
+                            <span class="text-gray-700">Haa</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="job_opportunities" value="Maya" class="hidden">
+                            <span class="text-gray-700">Maya</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="job_opportunities" value="Ma hubo" class="hidden">
+                            <span class="text-gray-700">Ma hubo</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Question 7 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">7. Haddii aad aaminsantahay in fursaduhu yaryihiin, maxaa sabab u ah midaaas?</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="limited_opportunities_reason" value="Shaqooyin yari" class="hidden">
+                            <span class="text-gray-700">Shaqooyin yari</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="limited_opportunities_reason" value="Xirfado la'aan" class="hidden">
+                            <span class="text-gray-700">Xirfado la'aan</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="limited_opportunities_reason" value="Qof garan la'aan (networking)" class="hidden">
+                            <span class="text-gray-700">Qof garan la'aan (networking)</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="limited_opportunities_reason" value="Mushahar hooseeya" class="hidden">
+                            <span class="text-gray-700">Mushahar hooseeya</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="limited_opportunities_reason" value="Sabab kale" class="hidden" id="otherReasonRadio">
+                            <span class="text-gray-700">Sabab kale</span>
+                        </label>
+                    </div>
+                    <input type="text" id="otherReasonInput" name="other_reason" class="other-input w-full px-4 py-3 rounded-lg mt-3 hidden" placeholder="Qor sababta kale...">
+                </div>
+                
+                <div class="flex justify-between mt-8">
+                    <button type="button" onclick="prevSlide()" class="btn-secondary px-6 py-3 rounded-lg text-gray-700 font-medium flex items-center">
+                        <i data-feather="arrow-left" class="w-4 h-4 mr-2"></i> Back
+                    </button>
+                    <button type="button" onclick="nextSlide()" class="btn-primary px-6 py-3 rounded-lg text-white font-medium flex items-center">
+                        Next <i data-feather="arrow-right" class="w-4 h-4 ml-2"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Slide 3 - Understanding Unemployment -->
+            <div class="slide glass-card p-6 md:p-8" id="slide3">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 section-title">Qaybta C – Fahamka shaqo la'aanta</h2>
+                
+                <!-- Question 8 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">8. Maxay kula tahay sababta aad shaqo la aanta utahay ama ay u jirto? (Dooro ilaa 2 sababood)</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="checkbox-option rounded-lg p-4 cursor-pointer border border-gray-200">
+                            <input type="checkbox" name="unemployment_reasons[]" value="Waxbarashada oo aan tayo lahayn" class="hidden">
+                            <span class="text-gray-700">Waxbarashada oo aan tayo lahayn</span>
+                        </label>
+                        <label class="checkbox-option rounded-lg p-4 cursor-pointer border border-gray-200">
+                            <input type="checkbox" name="unemployment_reasons[]" value="Fursadaha shaqo oo xadidan" class="hidden">
+                            <span class="text-gray-700">Fursadaha shaqo oo xadidan</span>
+                        </label>
+                        <label class="checkbox-option rounded-lg p-4 cursor-pointer border border-gray-200">
+                            <input type="checkbox" name="unemployment_reasons[]" value="Dawladda oo aan abuurin shaqooyin" class="hidden">
+                            <span class="text-gray-700">Dawladda oo aan abuurin shaqooyin</span>
+                        </label>
+                        <label class="checkbox-option rounded-lg p-4 cursor-pointer border border-gray-200">
+                            <input type="checkbox" name="unemployment_reasons[]" value="Caadooyin ama dhaqammo bulshada ka jira" class="hidden">
+                            <span class="text-gray-700">Caadooyin ama dhaqammo bulshada ka jira</span>
+                        </label>
+                        <label class="checkbox-option rounded-lg p-4 cursor-pointer border border-gray-200">
+                            <input type="checkbox" name="unemployment_reasons[]" value="Sabab kale" class="hidden" id="otherUnemploymentRadio">
+                            <span class="text-gray-700">Sabab kale</span>
+                        </label>
+                    </div>
+                    <input type="text" id="otherUnemploymentInput" name="other_unemployment_reason" class="other-input w-full px-4 py-3 rounded-lg mt-3 hidden" placeholder="Qor sababta kale...">
+                </div>
+                
+                <!-- Question 9 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">9. Ma jirtaa cid u hagar baxda si ay ku barto xirfad ama shaqo gacmeed (sida farsamo, computer, ama ganacsi)?</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="skills_training" value="Haa" class="hidden">
+                            <span class="text-gray-700">Haa</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="skills_training" value="Maya" class="hidden">
+                            <span class="text-gray-700">Maya</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Question 10 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">10. Haddii aad heli lahayd tababar ama fursad shaqo, ma xiiseyn lahayd inaad ka qayb gasho?</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="interested_training" value="Haa" class="hidden">
+                            <span class="text-gray-700">Haa</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="interested_training" value="Maya" class="hidden">
+                            <span class="text-gray-700">Maya</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="interested_training" value="Ma hubo" class="hidden">
+                            <span class="text-gray-700">Ma hubo</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between mt-8">
+                    <button type="button" onclick="prevSlide()" class="btn-secondary px-6 py-3 rounded-lg text-gray-700 font-medium flex items-center">
+                        <i data-feather="arrow-left" class="w-4 h-4 mr-2"></i> Back
+                    </button>
+                    <button type="button" onclick="nextSlide()" class="btn-primary px-6 py-3 rounded-lg text-white font-medium flex items-center">
+                        Next <i data-feather="arrow-right" class="w-4 h-4 ml-2"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Slide 4 - Migration Thoughts -->
+            <div class="slide glass-card p-6 md:p-8" id="slide4">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 section-title">Qaybta D – Fikirka ku saabsan tahriibka</h2>
+                
+                <!-- Question 11 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">11. Ma maqashay dhalinyaro iskuulkaaga ama xaafaddaada oo tahriibay?</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="know_migrants" value="Haa" class="hidden">
+                            <span class="text-gray-700">Haa</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="know_migrants" value="Maya" class="hidden">
+                            <span class="text-gray-700">Maya</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Question 12 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">12. Haddii aad aragtay maxaad u malaynaysaa sababta ay u tahriibeen?</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="migration_reason" value="Shaqo la'aan" class="hidden">
+                            <span class="text-gray-700">Shaqo la'aan</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="migration_reason" value="Rajo la'aan" class="hidden">
+                            <span class="text-gray-700">Rajo la'aan</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="migration_reason" value="Nolol ka fiican tan dalka oo ay heleen" class="hidden">
+                            <span class="text-gray-700">Nolol ka fiican tan dalka oo ay heleen</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="migration_reason" value="Saaxiibo/qoys hore u baxay" class="hidden">
+                            <span class="text-gray-700">Saaxiibo/qoys hore u baxay</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="migration_reason" value="Sabab kale" class="hidden" id="otherMigrationRadio">
+                            <span class="text-gray-700">Sabab kale</span>
+                        </label>
+                    </div>
+                    <input type="text" id="otherMigrationInput" name="other_migration_reason" class="other-input w-full px-4 py-3 rounded-lg mt-3 hidden" placeholder="Qor sababta kale...">
+                </div>
+                
+                <!-- Question 13 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">13. Adiga, ma ku fakartay inaad safar ama tahriib sameyso mustaqbalka?</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="considered_migration" value="Haa" class="hidden">
+                            <span class="text-gray-700">Haa</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="considered_migration" value="Maya" class="hidden">
+                            <span class="text-gray-700">Maya</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 text-center cursor-pointer">
+                            <input type="radio" name="considered_migration" value="Mararka qaar" class="hidden">
+                            <span class="text-gray-700">Mararka qaar</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Question 14 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">14. Haddii aad ku fikirto inaad tahriibto, maxay yihiin sababaha kugu riixaya?</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="migration_motivation" value="Fursado shaqo oo wanaagsan" class="hidden">
+                            <span class="text-gray-700">Fursado shaqo oo wanaagsan</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="migration_motivation" value="Inaad caawiso qoyska" class="hidden">
+                            <span class="text-gray-700">Inaad caawiso qoyska</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="migration_motivation" value="Nolol wanaagsan" class="hidden">
+                            <span class="text-gray-700">Nolol wanaagsan</span>
+                        </label>
+                        <label class="option-card rounded-lg p-4 cursor-pointer">
+                            <input type="radio" name="migration_motivation" value="Sabab kale" class="hidden" id="otherMotivationRadio">
+                            <span class="text-gray-700">Sabab kale</span>
+                        </label>
+                    </div>
+                    <input type="text" id="otherMotivationInput" name="other_motivation" class="other-input w-full px-4 py-3 rounded-lg mt-3 hidden" placeholder="Qor sababta kale...">
+                </div>
+                
+                <div class="flex justify-between mt-8">
+                    <button type="button" onclick="prevSlide()" class="btn-secondary px-6 py-3 rounded-lg text-gray-700 font-medium flex items-center">
+                        <i data-feather="arrow-left" class="w-4 h-4 mr-2"></i> Back
+                    </button>
+                    <button type="button" onclick="nextSlide()" class="btn-primary px-6 py-3 rounded-lg text-white font-medium flex items-center">
+                        Next <i data-feather="arrow-right" class="w-4 h-4 ml-2"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Slide 5 - Opportunities and Solutions -->
+            <div class="slide glass-card p-6 md:p-8" id="slide5">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 section-title">Qaybta E – Fursadaha iyo xalalka</h2>
+                
+                <!-- Question 15 -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium text-gray-700 mb-3">15. Maxay kula tahay in la sameeyo si dhalinyarada aysan u tahriibin oo ay shaqo u helaan gudaha Soomaaliya? (Dooro ilaa 3 sababood)</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="checkbox-option rounded-lg p-4 cursor-pointer border border-gray-200">
+                            <input type="checkbox" name="solutions[]" value="In la abuuro tababaro xirfadeed" class="hidden">
+                            <span class="text-gray-700">In la abuuro tababaro xirfadeed</span>
+                        </label>
+                        <label class="checkbox-option rounded-lg p-4 cursor-pointer border border-gray-200">
+                            <input type="checkbox" name="solutions[]" value="In la sameeyo shaqooyin dhalinyarada ah" class="hidden">
+                            <span class="text-gray-700">In la sameeyo shaqooyin dhalinyarada ah</span>
+                        </label>
+                        <label class="checkbox-option rounded-lg p-4 cursor-pointer border border-gray-200">
+                            <input type="checkbox" name="solutions[]" value="In la dhiirrigeliyo ganacsiyada yaryar" class="hidden">
+                            <span class="text-gray-700">In la dhiirrigeliyo ganacsiyada yaryar</span>
+                        </label>
+                        <label class="checkbox-option rounded-lg p-4 cursor-pointer border border-gray-200">
+                            <input type="checkbox" name="solutions[]" value="In la siiyo fursado waxbarasho iyo taageero" class="hidden">
+                            <span class="text-gray-700">In la siiyo fursado waxbarasho iyo taageero</span>
+                        </label>
+                        <label class="checkbox-option rounded-lg p-4 cursor-pointer border border-gray-200">
+                            <input type="checkbox" name="solutions[]" value="Fikrad kale" class="hidden" id="otherSolutionRadio">
+                            <span class="text-gray-700">Fikrad kale</span>
+                        </label>
+                    </div>
+                    <input type="text" id="otherSolutionInput" name="other_solution" class="other-input w-full px-4 py-3 rounded-lg mt-3 hidden" placeholder="Qor fikrada kale...">
+                </div>
+                
+                <div class="flex justify-between mt-8">
+                    <button type="button" onclick="prevSlide()" class="btn-secondary px-6 py-3 rounded-lg text-gray-700 font-medium flex items-center">
+                        <i data-feather="arrow-left" class="w-4 h-4 mr-2"></i> Back
+                    </button>
+                    <button type="submit" class="btn-primary px-6 py-3 rounded-lg text-white font-medium flex items-center">
+                        Submit <i data-feather="check" class="w-4 h-4 ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="glass-card rounded-2xl p-8 max-w-md mx-4 text-center">
+            <div class="inline-block p-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mb-4">
+                <i data-feather="check-circle" class="w-12 h-12 text-white"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-3">Mahadsanid!</h3>
+            <p class="text-gray-700 mb-6">Jawaabtaada ayaa noo ahaatay mid aad muhiim u ah. Waxaan ku rajeyneynaa inaad mustaqbalka fursado wanaagsan hesho.</p>
+            <button onclick="closeModal()" class="btn-primary px-6 py-3 rounded-lg text-white font-medium">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBUc5hcM-aDwF3YqLkMrlGQ39aUKesAPwI",
+            authDomain: "sylead-surveys.firebaseapp.com",
+            projectId: "sylead-surveys",
+            storageBucket: "sylead-surveys.appspot.com",
+            messagingSenderId: "1022858819367",
+            appId: "1:1022858819367:web:819cc345a439ccb691db02",
+            measurementId: "G-E9E04BWX5Y"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+        
+        // Initialize Feather Icons
+        feather.replace();
+        
+        // Current slide tracking
+        let currentSlide = 1;
+        const totalSlides = 5;
+        
+        // Show the current slide
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach(slide => slide.classList.remove('active'));
+            document.getElementById(`slide${n}`).classList.add('active');
+            
+            // Update progress steps
+            updateProgressSteps(n);
+        }
+        
+        // Update progress steps
+        function updateProgressSteps(n) {
+            const steps = document.querySelectorAll('.progress-step');
+            const connectors = document.querySelectorAll('.progress-connector');
+            
+            steps.forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                
+                if (index + 1 < n) {
+                    step.classList.add('completed');
+                } else if (index + 1 === n) {
+                    step.classList.add('active');
+                }
+            });
+            
+            connectors.forEach((connector, index) => {
+                connector.classList.remove('active');
+                
+                if (index + 1 < n - 1) {
+                    connector.classList.add('active');
+                }
+            });
+        }
+        
+        // Next slide
+        function nextSlide() {
+            if (validateCurrentSlide()) {
+                if (currentSlide < totalSlides) {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                    window.scrollTo(0, 0);
+                }
+            }
+        }
+        
+        // Previous slide
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                showSlide(currentSlide);
+                window.scrollTo(0, 0);
+            }
+        }
+        
+        // Validate current slide before proceeding
+        function validateCurrentSlide() {
+            const currentSlideEl = document.getElementById(`slide${currentSlide}`);
+            
+            // Validate required fields
+            const requiredInputs = currentSlideEl.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredInputs.forEach(input => {
+                if (!input.value) {
+                    input.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    input.classList.remove('border-red-500');
+                }
+            });
+            
+            // Validate radio buttons
+            const requiredRadios = currentSlideEl.querySelectorAll('input[type="radio"][required]');
+            const radioGroups = {};
+            
+            requiredRadios.forEach(radio => {
+                const name = radio.name;
+                if (!radioGroups[name]) {
+                    radioGroups[name] = {
+                        checked: false,
+                        elements: []
+                    };
+                }
+                radioGroups[name].elements.push(radio);
+                if (radio.checked) {
+                    radioGroups[name].checked = true;
+                }
+            });
+            
+            Object.keys(radioGroups).forEach(name => {
+                if (!radioGroups[name].checked) {
+                    radioGroups[name].elements.forEach(radio => {
+                        const parent = radio.closest('.option-card');
+                        if (parent) {
+                            parent.classList.add('border-red-500');
+                        }
+                    });
+                    isValid = false;
+                } else {
+                    radioGroups[name].elements.forEach(radio => {
+                        const parent = radio.closest('.option-card');
+                        if (parent) {
+                            parent.classList.remove('border-red-500');
+                        }
+                    });
+                }
+            });
+            
+            // Validate checkboxes with max selections
+            const checkboxGroups = currentSlideEl.querySelectorAll('input[type="checkbox"][data-max]');
+            
+            checkboxGroups.forEach(checkbox => {
+                const name = checkbox.name;
+                const max = parseInt(checkbox.dataset.max);
+                const checkedCount = currentSlideEl.querySelectorAll(`input[name="${name}"]:checked`).length;
+                
+                if (checkedCount > max) {
+                    alert(`Fadlan dooro ugu badnaan ${max} jawaab.`);
+                    checkbox.checked = false;
+                    isValid = false;
+                }
+            });
+            
+            if (!isValid) {
+                alert("Fadlan buuxi dhammaan goobaha loo baahan yahay ka hor intaadan sii wadid.");
+            }
+            
+            return isValid;
+        }
+        
+        // Toggle "Other" input fields
+        function toggleOtherInput(radioId, inputId) {
+            const radio = document.getElementById(radioId);
+            const input = document.getElementById(inputId);
+            
+            if (radio.checked) {
+                input.classList.remove('hidden');
+                input.required = true;
+            } else {
+                input.classList.add('hidden');
+                input.required = false;
+                input.value = '';
+            }
+        }
+        
+        // Event listeners for "Other" options
+        document.getElementById('otherReasonRadio').addEventListener('change', function() {
+            toggleOtherInput('otherReasonRadio', 'otherReasonInput');
+        });
+        
+        document.getElementById('otherUnemploymentRadio').addEventListener('change', function() {
+            toggleOtherInput('otherUnemploymentRadio', 'otherUnemploymentInput');
+        });
+        
+        document.getElementById('otherMigrationRadio').addEventListener('change', function() {
+            toggleOtherInput('otherMigrationRadio', 'otherMigrationInput');
+        });
+        
+        document.getElementById('otherMotivationRadio').addEventListener('change', function() {
+            toggleOtherInput('otherMotivationRadio', 'otherMotivationInput');
+        });
+        
+        document.getElementById('otherSolutionRadio').addEventListener('change', function() {
+            toggleOtherInput('otherSolutionRadio', 'otherSolutionInput');
+        });
+        
+        // Option card selection
+        document.addEventListener('click', function(e) {
+            // Handle radio option cards
+            if (e.target.closest('.option-card')) {
+                const card = e.target.closest('.option-card');
+                const radio = card.querySelector('input[type="radio"]');
+                const checkbox = card.querySelector('input[type="checkbox"]');
+                
+                if (radio) {
+                    radio.checked = true;
+                    document.querySelectorAll(`input[name="${radio.name}"]`).forEach(r => {
+                        r.closest('.option-card').classList.remove('selected');
+                    });
+                    card.classList.add('selected');
+                } else if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    card.classList.toggle('selected', checkbox.checked);
+                }
+            }
+            
+            // Handle checkbox options
+            if (e.target.closest('.checkbox-option')) {
+                const option = e.target.closest('.checkbox-option');
+                const checkbox = option.querySelector('input[type="checkbox"]');
+                checkbox.checked = !checkbox.checked;
+                option.classList.toggle('selected', checkbox.checked);
+            }
+        });
+        
+        // Form submission
+        document.getElementById('surveyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (validateCurrentSlide()) {
+                const formData = new FormData(e.target);
+                const data = {};
+                
+                // Convert FormData to object
+                formData.forEach((value, key) => {
+                    // Handle checkbox arrays
+                    if (key.endsWith('[]')) {
+                        const realKey = key.slice(0, -2);
+                        if (!data[realKey]) {
+                            data[realKey] = [];
+                        }
+                        data[realKey].push(value);
+                    } else {
+                        data[key] = value;
+                    }
+                });
+                
+                // Add timestamp
+                data.timestamp = new Date().toISOString();
+                
+                try {
+                    await db.collection('secondary_student_surveys').add(data);
+                    document.getElementById('successModal').classList.remove('hidden');
+                    document.getElementById('successModal').classList.add('flex');
+                } catch (error) {
+                    console.error('Error submitting survey:', error);
+                    alert('Khalad ayaa dhacay markii la diray. Fadlan isku day mar kale.');
+                }
+            }
+        });
+        
+        // Close modal
+        function closeModal() {
+            document.getElementById('successModal').classList.add('hidden');
+            document.getElementById('successModal').classList.remove('flex');
+            // Reset form and return to first slide
+            document.getElementById('surveyForm').reset();
+            currentSlide = 1;
+            showSlide(currentSlide);
+            window.scrollTo(0, 0);
+        }
+        
+        // Initialize first slide
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
