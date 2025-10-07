@@ -360,9 +360,9 @@
                             <input type="radio" name="limited_opportunities_reason" value="Mushahar hooseeya" class="hidden">
                             <span class="text-gray-700">Mushahar hooseeya</span>
                         </label>
-                       
+                        <!-- 'Sabab kale' option removed -->
                     </div>
-                    <input type="text" id="otherReasonInput" name="other_reason" class="other-input w-full px-4 py-3 rounded-lg mt-3 hidden" placeholder="Qor sababta kale...">
+                    <!-- otherReason input removed -->
                 </div>
                 
                 <div class="flex justify-between mt-8">
@@ -399,9 +399,9 @@
                             <input type="checkbox" name="unemployment_reasons[]" value="Caadooyin ama dhaqammo bulshada ka jira" class="hidden">
                             <span class="text-gray-700">Caadooyin ama dhaqammo bulshada ka jira</span>
                         </label>
-                       
+                        <!-- 'Sabab kale' option removed -->
                     </div>
-                    <input type="text" id="otherUnemploymentInput" name="other_unemployment_reason" class="other-input w-full px-4 py-3 rounded-lg mt-3 hidden" placeholder="Qor sababta kale...">
+                    <!-- otherUnemployment input removed -->
                 </div>
                 
                 <!-- Question 9 -->
@@ -487,9 +487,9 @@
                             <input type="radio" name="migration_reason" value="Saaxiibo/qoys hore u baxay" class="hidden">
                             <span class="text-gray-700">Saaxiibo/qoys hore u baxay</span>
                         </label>
-                       
+                        <!-- 'Sabab kale' option removed -->
                     </div>
-                    <input type="text" id="otherMigrationInput" name="other_migration_reason" class="other-input w-full px-4 py-3 rounded-lg mt-3 hidden" placeholder="Qor sababta kale...">
+                    <!-- otherMigration input removed -->
                 </div>
                 
                 <!-- Question 13 -->
@@ -527,9 +527,9 @@
                             <input type="radio" name="migration_motivation" value="Nolol wanaagsan" class="hidden">
                             <span class="text-gray-700">Nolol wanaagsan</span>
                         </label>
-                        
+                        <!-- 'Sabab kale' option removed -->
                     </div>
-                    <input type="text" id="otherMotivationInput" name="other_motivation" class="other-input w-full px-4 py-3 rounded-lg mt-3 hidden" placeholder="Qor sababta kale...">
+                    <!-- otherMotivation input removed -->
                 </div>
                 
                 <div class="flex justify-between mt-8">
@@ -566,9 +566,9 @@
                             <input type="checkbox" name="solutions[]" value="In la siiyo fursado waxbarasho iyo taageero" class="hidden">
                             <span class="text-gray-700">In la siiyo fursado waxbarasho iyo taageero</span>
                         </label>
-                       
+                        <!-- 'Fikrad kale' option removed -->
                     </div>
-                    <input type="text" id="otherSolutionInput" name="other_solution" class="other-input w-full px-4 py-3 rounded-lg mt-3 hidden" placeholder="Qor fikrada kale...">
+                    <!-- otherSolution input removed -->
                 </div>
                 
                 <div class="flex justify-between mt-8">
@@ -755,41 +755,7 @@
             return isValid;
         }
         
-        // Toggle "Other" input fields
-        function toggleOtherInput(radioId, inputId) {
-            const radio = document.getElementById(radioId);
-            const input = document.getElementById(inputId);
-            
-            if (radio.checked) {
-                input.classList.remove('hidden');
-                input.required = true;
-            } else {
-                input.classList.add('hidden');
-                input.required = false;
-                input.value = '';
-            }
-        }
-        
-        // Event listeners for "Other" options
-        document.getElementById('otherReasonRadio').addEventListener('change', function() {
-            toggleOtherInput('otherReasonRadio', 'otherReasonInput');
-        });
-        
-        document.getElementById('otherUnemploymentRadio').addEventListener('change', function() {
-            toggleOtherInput('otherUnemploymentRadio', 'otherUnemploymentInput');
-        });
-        
-        document.getElementById('otherMigrationRadio').addEventListener('change', function() {
-            toggleOtherInput('otherMigrationRadio', 'otherMigrationInput');
-        });
-        
-        document.getElementById('otherMotivationRadio').addEventListener('change', function() {
-            toggleOtherInput('otherMotivationRadio', 'otherMotivationInput');
-        });
-        
-        document.getElementById('otherSolutionRadio').addEventListener('change', function() {
-            toggleOtherInput('otherSolutionRadio', 'otherSolutionInput');
-        });
+        // 'Other' inputs and their handlers removed as requested
         
         // Option card selection
         document.addEventListener('click', function(e) {
